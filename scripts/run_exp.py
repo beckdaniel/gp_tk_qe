@@ -15,8 +15,22 @@ import json
 
 def save_parameters(m, param_file):
     param_names = m.parameter_names()
-    param_values = m.param_array
-    params = {name: val for name, val in zip(param_names, param_values)}
+    #param_values = m.param_array
+    params = {}
+    for p_name in param_names:
+        try:
+            params[p_name] = float(m[p_name])
+        except TypeError: #ARD
+            params[p_name] = list(m[p_name])
+
+    
+    # if len(param_names) == len(param_values):
+    #     params = {name: val for name, val in zip(param_names, param_values)}
+    # else:
+    #     params = {name: val for name, val in zip(param_names, param_values)}
+    #     params['Gaussian_noise.variance'] = float(m['Gaussian_noise.variance'])
+    #     params['Mat52.lengthscale'] = list(m['.*lengthscale.*'])
+
     with open(param_file, 'w') as f:
         json.dump(params, f)
 
@@ -81,18 +95,22 @@ def run_experiment(model_type):
             w = GPy.util.warping_functions.LogFunction()
             m = GPy.models.WarpedGP(X_feats_train, Y_train, kernel=rbf_iso, warping_function=w)
             m.optimize(max_iters=100, optimizer='lbfgs')
-            iso_variance = m['rbf.variance'].copy()
-            rbf_ard['lengthscale'] = m['rbf.lengthscale'].copy()
+            print m
+            print m['.*lengthscale.*']
+            iso_variance = m['Mat52.variance'].copy()
+            rbf_ard['lengthscale'] = m['Mat52.lengthscale'].copy()
             noise_var = m['Gaussian_noise.variance'].copy()
             if model_type >= 6:
                 #m = GPy.models.GPRegression(X_feats_train, Y_train, kernel=rbf_ard)
                 w = GPy.util.warping_functions.LogFunction()
                 m = GPy.models.WarpedGP(X_feats_train, Y_train, kernel=rbf_ard, warping_function=w)
-                m['Gaussian_noise.variance'] = noise_var
-                m['rbf.variance'] = iso_variance
+                #m['Gaussian_noise.variance'] = noise_var
+                m['Mat52.variance'] = iso_variance
                 m.optimize(max_iters=100, optimizer='lbfgs')
-                ard_variance = m['rbf.variance'].copy()
-                ard_lengthscale = m['rbf.lengthscale'].copy()
+                print m
+                print m['.*lengthscale.*']
+                ard_variance = m['Mat52.variance'].copy()
+                ard_lengthscale = m['Mat52.lengthscale'].copy()
                 noise_var = m['Gaussian_noise.variance'].copy()
 
         
@@ -110,9 +128,9 @@ def run_experiment(model_type):
         w = GPy.util.warping_functions.LogFunction()
         m = GPy.models.WarpedGP(X_train, Y_train, kernel=k, warping_function=w)
         if model_type >= 6:
-            m['.*rbf.variance.*'].constrain_fixed(ard_variance)
-            m['.*rbf.lengthscale.*'].constrain_fixed(ard_lengthscale)
-            m['Gaussian_noise.variance'] = noise_var
+            m['.*Mat52.variance.*'].constrain_fixed(ard_variance)
+            m['.*Mat52.lengthscale.*'].constrain_fixed(ard_lengthscale)
+            m['Gaussian_noise.variance'].constrain_fixed(noise_var)
 
 
         try:
@@ -141,7 +159,7 @@ def run_experiment(model_type):
         np.savetxt(os.path.join(PREDS_DIR, str(fold), MODEL_NAMES[model_type] + '.before.metrics'), all_before_metrics, fmt='%.5f')        
 
         print m
-        m.optimize(max_iters=50, messages=True, optimizer='lbfgs')
+        m.optimize(max_iters=100, messages=True, optimizer='lbfgs')
         print m
         if model_type >= 5:
             print m['.*lengthscale.*']
@@ -205,9 +223,9 @@ MODEL_NAMES = dict([(-1, 'SVM'),
                     (2, 'TK_MUL'),
                     (3, 'TK_ADD_FIXED_SIGMA'),
                     (4, 'TK_MUL_FIXED_SIGMA'),
-                    (5, 'RBF'),
-                    (6, 'RBF_TK_ADD'),
-                    (7, 'RBF_TK_MUL')
+                    (5, 'MAT52'),
+                    (6, 'MAT52_TK_ADD'),
+                    (7, 'MAT52_TK_MUL')
                     ])
 
 
