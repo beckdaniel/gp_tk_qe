@@ -37,7 +37,7 @@ def save_parameters(m, param_file):
 
 ###################################
 def run_experiment(model_type):
-    for fold in xrange(1):
+    for fold in xrange(5, 10):
         fold_dir = os.path.join(DATA_DIR, str(fold))
         train_data = np.loadtxt(os.path.join(fold_dir, 'train'), dtype=object, delimiter='\t')
         test_data = np.loadtxt(os.path.join(fold_dir, 'test'), dtype=object, delimiter='\t')
