@@ -37,7 +37,7 @@ def save_parameters(m, param_file):
 
 ###################################
 def run_experiment(model_type):
-    for fold in xrange(5, 10):
+    for fold in xrange(FOLD_START, FOLD_END):
         fold_dir = os.path.join(DATA_DIR, str(fold))
         train_data = np.loadtxt(os.path.join(fold_dir, 'train'), dtype=object, delimiter='\t')
         test_data = np.loadtxt(os.path.join(fold_dir, 'test'), dtype=object, delimiter='\t')
@@ -217,6 +217,8 @@ SUB_TRAIN = int(sys.argv[2])
 NUM_THREADS = int(sys.argv[3])
 MODELS = [int(m) for m in sys.argv[4].split(',')]
 PREDS_DIR = sys.argv[5]
+FOLD_START = int(sys.argv[6])
+FOLD_END = int(sys.argv[7])
 MODEL_NAMES = dict([(-1, 'SVM'),
                     (0, 'MEAN'),
                     (1, 'TK_ADD'),
